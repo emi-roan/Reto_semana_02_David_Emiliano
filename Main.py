@@ -1,11 +1,9 @@
 import sys
 
 def fahrenheit_a_celsius(f):
-    """Convierte Fahrenheit a Celsius."""
     return (f - 32) * 5 / 9
 
-def clasificar(celsius):
-    """Clasifica la temperatura según los rangos del IPN."""
+def clasificar_temperatura(celsius):
     if celsius < 0:
         return "Congelante"
     elif celsius <= 15:
@@ -17,48 +15,55 @@ def clasificar(celsius):
     else:
         return "Extremo"
 
+def procesar_linea(linea):
+    partes = [p.strip() for p in linea.strip().split(",")]
+
+    if len(partes) != 3:
+        return None
+
+    ciudad, temp_str, unidad = partes
+    unidad = unidad.upper()
+
+    if not ciudad:
+        return None
+
+    if unidad not in ("C", "F"):
+        return None
+
+    try:
+        temperatura = float(temp_str)
+    except ValueError:
+        return None
+
+    if unidad == "F":
+        celsius = fahrenheit_a_celsius(temperatura)
+    else:
+        celsius = temperatura
+
+    clasificacion = clasificar_temperatura(celsius)
+
+    return ciudad, celsius, clasificacion
+
 def main():
-    # 1. Imprimir encabezado de salida obligatorio
     print("ciudad,temperatura_celsius,clasificacion")
-    
-    # 2. Procesar línea por línea desde stdin
+
     primera_linea = True
+
     for linea in sys.stdin:
-        linea = linea.strip()
-        
-        # Saltar encabezado de entrada y líneas vacías
+        if not linea.strip():
+            continue
+
         if primera_linea:
             primera_linea = False
-            continue
-        if not linea:
-            continue
-        
-        # 3. Separar y validar columnas
-        partes = linea.split(',')
-        if len(partes) != 3:
-            continue
-            
-        ciudad = partes[0].strip()
-        temp_str = partes[1].strip()
-        unidad = partes[2].strip().upper() # Maneja 'c' o 'C'
-        
-        # 4. Validar tipos de datos
-        if unidad not in ['C', 'F']:
-            continue
-        try:
-            valor_temp = float(temp_str)
-        except ValueError:
-            continue
-            
-        # 5. Lógica de conversión
-        if unidad == 'F':
-            celsius = fahrenheit_a_celsius(valor_temp)
-        else:
-            celsius = valor_temp
-            
-        # 6. Clasificar e imprimir con 1 decimal
-        resultado_clase = clasificar(celsius)
-        print(f"{ciudad},{celsius:.1f},{resultado_clase}")
+
+            if "ciudad" in linea.lower():
+                continue
+
+        resultado = procesar_linea(linea)
+
+        if resultado is not None:
+            ciudad, celsius, clasificacion = resultado
+            print(f"{ciudad},{celsius:.1f},{clasificacion}")
 
 if __name__ == "__main__":
     main()
